@@ -1,4 +1,4 @@
-module github.com/iTortex/go_API_gRPC_service
+module example.com/module
 
 go 1.16
 

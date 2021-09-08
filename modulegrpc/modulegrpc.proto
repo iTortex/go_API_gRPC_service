@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package modulegrpc;
+
+option go_package = "example.com/module;module";
+
+service UserManagment {
+	rpc Create (URL) returns (ShortURL) {}
+	rpc Get (ShortURL) returns (URL) {}
+}
+
+message URL {
+	string name = 1;
+}
+
+message ShortURL {
+	int32 name = 1;
+}
