@@ -14,5 +14,6 @@ message URL {
 }
 
 message ShortURL {
-	int32 name = 1;
+	string name = 1;
+	string shortname = 2;
 }

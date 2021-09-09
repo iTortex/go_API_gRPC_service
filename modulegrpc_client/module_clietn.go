@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
-	"fmt"
+	// "fmt"
+	"bufio"
 	"log"
+	"os"
+	"strings"
 	"time"
-	"strconv"
 
 	pb "example.com/module/modulegrpc" // pb = protobuf  в начале мы настроили среду в module после чего указываем откуда мы подтягиваем функции (возможно неверное описание)
 	"google.golang.org/grpc"
@@ -26,23 +28,40 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second * 100)
 	defer cancel()
-	var args string
+	scan := bufio.NewScanner(os.Stdin)
 	for {
-		fmt.Scan(&args)
-		some, err := strconv.Atoi(args)
-		if err != nil {
-			sh, err := c.Create(ctx, &pb.URL{Name: args})
-			if err != nil {
-				log.Fatalf("could not create short: %v", err)
+		log.Print("Please enter the data: ")
+		scan.Scan()
+		com := strings.Split(string(scan.Text()), " ")
+		if com[0] == "Create" {
+			if sh, err := c.Create(ctx, &pb.URL{Name: com[1]}); err == nil {
+				log.Printf("Long and short URL is %v : %v", sh.GetName(), sh.GetShortname())
+			} else { 
+				log.Printf("Please, try it again")
+				continue 
 			}
-			log.Printf("Short URL is %v", sh.GetName())
-		} else
-		{
-			r, err := c.Get(ctx, &pb.ShortURL{Name: int32(some)})
-			if err != nil {
-				log.Printf("%v", err)
-			} else { log.Printf("Long URL is %v", r.GetName()) }
 		}
+		if com[0] == "Get" {
+			if sh, err := c.Get(ctx, &pb.ShortURL{Shortname: com[1]}); err == nil {
+				log.Printf("Long URL is %v", sh.GetName())
+			} else {
+				log.Printf("Please, try it again")
+				continue
+			}
+		}
+		// if err != nil {
+		// 	sh, err := c.Create(ctx, &pb.URL{Name: args})
+		// 	if err != nil {
+		// 		log.Fatalf("could not create short: %v", err)
+		// 	}
+		// 	log.Printf("Short URL is %v", sh.GetName())
+		// } else
+		// {
+		// 	r, err := c.Get(ctx, &pb.ShortURL{Name: int32(some)})
+		// 	if err != nil {
+		// 		log.Printf("%v", err)
+		// 	} else { log.Printf("Long URL is %v", r.GetName()) }
+		// }
 	}
 
 // 	for name, age := range new_users {
