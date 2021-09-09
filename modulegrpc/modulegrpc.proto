@@ -14,6 +14,5 @@ message URL {
 }
 
 message ShortURL {
-	string name = 1;
 	string shortname = 2;
 }

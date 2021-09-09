@@ -33,9 +33,10 @@ func main() {
 		log.Print("Please enter the data: ")
 		scan.Scan()
 		com := strings.Split(string(scan.Text()), " ")
+		log.Print(com[0], "  ", com[1])
 		if com[0] == "Create" {
 			if sh, err := c.Create(ctx, &pb.URL{Name: com[1]}); err == nil {
-				log.Printf("Long and short URL is %v : %v", sh.GetName(), sh.GetShortname())
+				log.Printf("Long and short URL is %v",sh.GetShortname())
 			} else { 
 				log.Printf("Please, try it again")
 				continue 
@@ -49,36 +50,5 @@ func main() {
 				continue
 			}
 		}
-		// if err != nil {
-		// 	sh, err := c.Create(ctx, &pb.URL{Name: args})
-		// 	if err != nil {
-		// 		log.Fatalf("could not create short: %v", err)
-		// 	}
-		// 	log.Printf("Short URL is %v", sh.GetName())
-		// } else
-		// {
-		// 	r, err := c.Get(ctx, &pb.ShortURL{Name: int32(some)})
-		// 	if err != nil {
-		// 		log.Printf("%v", err)
-		// 	} else { log.Printf("Long URL is %v", r.GetName()) }
-		// }
 	}
-
-// 	for name, age := range new_users {
-// 		r, err := c.CreateNewUser(ctx, &pb.NewUser{Name: name, Age: age})
-// 		if err != nil {
-// 			log.Fatalf("could not create user: %v", err)
-// 		}
-// 		log.Printf(`User Details:
-// NAME: %s
-// AGE: %d
-// ID: %d`, r.GetName(), r.GetAge(), r.GetId())
-// 	}
-// 	params := &pb.GetUsersParams{}
-// 	r, err := c.GetUsers(ctx, params)
-// 	if err != nil {
-// 		log.Fatalf("Could not retrive users: %v", err)
-// 	}
-// 	log.Print("\nUser List : \n")
-// 	fmt.Printf("r. GetUsers(): %v\n", r.GetUsers())
 }
