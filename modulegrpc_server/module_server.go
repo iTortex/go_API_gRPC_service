@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"os"
 
-	pb "example.com/module/modulegrpc" // pb = protobuf  в начале мы настроили среду в module после чего указываем откуда мы подтягиваем функции (возможно неверное описание)
+	pb "example.com/1module/modulegrpc" // pb = protobuf  в начале мы настроили среду в module после чего указываем откуда мы подтягиваем функции (возможно неверное описание)
 	"github.com/jackc/pgx/v4"
 	"google.golang.org/grpc"
 )
@@ -24,6 +24,11 @@ func NewUserManagmentServer() *UserManagmentServer {
 	return &UserManagmentServer{}
 }
 
+type user struct {
+	ID       int
+	URL      string
+	ShortUrl string
+}
 type UserManagmentServer struct {
 	conn *pgx.Conn
 	pb.UnimplementedUserManagmentServer
@@ -51,6 +56,7 @@ func Validate(URL string) error {
 func (s *UserManagmentServer) Create(ctx context.Context, in *pb.URL) (*pb.ShortURL, error) {
 	createSql := `
 	create table if not exists urls(
+		ID SERIAL PRIMARY KEY,
 		URL text,
 		ShortURL text
 		);
@@ -70,35 +76,45 @@ func (s *UserManagmentServer) Create(ctx context.Context, in *pb.URL) (*pb.Short
 	if err != nil {
 		return nil, err
 	}
+	search := rows
 	defer rows.Close()
-	for rows.Next() {
-		user := [2]string{}
-		err := rows.Scan(&user[0], &user[1])
+	for search.Next() {
+		var some_user user
+		err := search.Scan(&some_user.ID, &some_user.URL, &some_user.ShortUrl)
 		if err != nil {
 			return nil, err
 		}
-		if in.GetName() == user[0] {
-			return &pb.ShortURL{Shortname: user[1]}, nil
+		// log.Printf("CHEEEECKNAME: %v: %v", user[0], in.GetName())
+		if some_user.URL != "" && in.GetName() == some_user.URL {
+			// log.Printf("CHEEEECKNAMEINFUNC: %v", user[0])
+			log.Printf("Returned: %v", some_user.ShortUrl)
+			return &pb.ShortURL{Shortname: some_user.ShortUrl}, nil
 		}
 	}
-
+	some, err := s.conn.Query(context.Background(), "select * from urls")
+	if err != nil {
+		return nil, err
+	}
+	defer some.Close()
 	str, err := Shorting(in.GetName())
-	for i := 0; i < len(rows.RawValues()); i++ {
+	for some.Next() {
 		if err != nil {
 			log.Printf("Cant short it: %v", err)
 			return nil, err
 		}
-		user := [2]string{}
-		err := rows.Scan(&user[0], &user[1])
+		var some_user user
+		err := search.Scan(&some_user.ID, &some_user.URL, &some_user.ShortUrl)
+		// log.Printf("CHEEEECKSHORT: %v", user[1])
 		if err != nil {
 			return nil, err
 		}
-		if str == user[1] {
+		if str == some_user.ShortUrl {
 			str, err = Shorting(in.GetName())
 			if err != nil {
 				log.Printf("Cant short it: %v", err)
 				return nil, err
 			}
+			// i = 0
 		}
 	}
 	created_short := &pb.ShortURL{Shortname: str}
@@ -111,22 +127,25 @@ func (s *UserManagmentServer) Create(ctx context.Context, in *pb.URL) (*pb.Short
 		log.Fatalf("tx.Exec failed: %v", err)
 	}
 	tx.Commit(context.Background())
+	log.Printf("Returned END: %v", str)
 	return &pb.ShortURL{Shortname: str}, nil
 }
 func (s *UserManagmentServer) Get(ctx context.Context, in *pb.ShortURL) (*pb.URL, error) {
+	log.Printf("Received: %v", in.GetShortname())
 	rows, err := s.conn.Query(context.Background(), "select * from urls")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		user := [2]string{}
-		err := rows.Scan(&user[0], &user[1])
+		var some_user user
+		err := rows.Scan(&some_user.ID, &some_user.URL, &some_user.ShortUrl)
 		if err != nil {
 			return nil, err
 		}
-		if in.GetShortname() == user[1] {
-			return &pb.URL{Name: user[0]}, nil
+		if in.GetShortname() == some_user.ShortUrl {
+			log.Printf("Returned: %v", some_user.URL)
+			return &pb.URL{Name: some_user.URL}, nil
 		}
 	}
 	err = errors.New("It has not short implementation")
@@ -145,7 +164,7 @@ func (server *UserManagmentServer) Run() error {
 }
 
 func main() {
-	database_url := "postgres://postgres:mysecretpassword@192.168.99.100:5432/postgres"
+	database_url := "postgres://amarcele:qwertyui@db:5432/samplegres"
 	conn, err := pgx.Connect(context.Background(), database_url)
 	if err != nil {
 		log.Fatalf("Unable to establish connection: %v", err)

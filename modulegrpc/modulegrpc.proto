@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package modulegrpc;
 
-option go_package = "example.com/module;module";
+option go_package = "example.com/1module;1module";
 
 service UserManagment {
 	rpc Create (URL) returns (ShortURL) {}
