@@ -26,10 +26,10 @@ const (
 )
 
 func TestAdd(t *testing.T) {
-	if _, err := Shorting(empty_str); err != nil { t.Errorf("Shorting error: %v\n", err) }
-	if _, err := Shorting(simple_error_str); err != nil { t.Errorf("Shorting error: %v\n", err) }
-	if _, err := Shorting(simple_work_url); err != nil { t.Errorf("Shorting error: %v\n", err) }
-	if _, err := Shorting(long_str); err != nil { t.Errorf("Shorting error: %v\n", err) }
+	if _, err := Shorting(); err != nil { t.Errorf("Shorting error: %v\n", err) }
+	if _, err := Shorting(); err != nil { t.Errorf("Shorting error: %v\n", err) }
+	if _, err := Shorting(); err != nil { t.Errorf("Shorting error: %v\n", err) }
+	if _, err := Shorting(); err != nil { t.Errorf("Shorting error: %v\n", err) }
 	if err := Validate(empty_str); err == nil { t.Errorf("Validate error: %v\n", err) }
 	if err := Validate(simple_error_str); err == nil { t.Errorf("Validate error: %v\n", err) }
 	if err := Validate(simple_work_url); err != nil { t.Errorf("Validate error: %v\n", err) }

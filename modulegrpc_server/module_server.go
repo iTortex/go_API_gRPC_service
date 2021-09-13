@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	// "errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -10,9 +9,9 @@ import (
 	"net/url"
 	"os"
 
-	pb "example.com/1module/modulegrpc" // pb = protobuf  в начале мы настроили среду в module после чего указываем откуда мы подтягиваем функции (возможно неверное описание)
-	"github.com/jackc/pgx/v4"
+	pb "example.com/1module/modulegrpc"
 	"google.golang.org/grpc"
+	"github.com/jackc/pgx/v4"
 )
 
 const (
@@ -25,7 +24,7 @@ func NewUserManagmentServer() *UserManagmentServer {
 }
 
 type user struct {
-	ID       int
+	ID       int32
 	URL      string
 	ShortUrl string
 }
@@ -34,7 +33,7 @@ type UserManagmentServer struct {
 	pb.UnimplementedUserManagmentServer
 }
 
-func Shorting(URL string) (string, error) {
+func Shorting() (string, error) {
 	b := make([]byte, 10)
 	for i := range b {
 		b[i] = bytes[rand.Intn(len(bytes))]
@@ -71,20 +70,21 @@ func (s *UserManagmentServer) Create(ctx context.Context, in *pb.URL) (*pb.Short
 		log.Printf("Not valid URL: %v", err)
 		return nil, err
 	}
-		rows := s.conn.QueryRow(context.Background(), "select * from urls where URL=$1", in.GetName())
-		var some_user user
-		// check_empty := errors.New("no rows in result set")
-		err = rows.Scan(&some_user.ID, &some_user.URL, &some_user.ShortUrl)
-		if err != nil && err.Error() != "no rows in result set" {
+
+	rows := s.conn.QueryRow(context.Background(), "select * from urls where URL=$1", in.GetName())
+	var some_user user
+
+	err = rows.Scan(&some_user.ID, &some_user.URL, &some_user.ShortUrl)
+	if err != nil && err.Error() != "no rows in result set" {
 			log.Printf("error check: %v\n", err)
 			return nil, err
 		}
-		if in.GetName() == some_user.URL {
+	if in.GetName() == some_user.URL {
 			log.Printf("Returned: %v", some_user.ShortUrl)
 			return &pb.ShortURL{Shortname: some_user.ShortUrl}, nil
-		}
-		// выше работает 
-	str, err := Shorting(in.GetName())
+	}
+
+	str, err := Shorting()
 	if err != nil {
 		log.Printf("Cant short it: %v", err)
 		return nil, err
@@ -96,7 +96,7 @@ func (s *UserManagmentServer) Create(ctx context.Context, in *pb.URL) (*pb.Short
 		return nil, err
 	}
 	for err == nil {
-		str, err = Shorting(in.GetName())
+		str, err = Shorting()
 		if err != nil {
 			log.Printf("Cant short it: %v", err)
 			return nil, err
@@ -108,33 +108,32 @@ func (s *UserManagmentServer) Create(ctx context.Context, in *pb.URL) (*pb.Short
 			return nil, err
 		}
 	}
-	// if err == nil {
-		created_short := &pb.ShortURL{Shortname: str}
-		tx, err := s.conn.Begin(context.Background())
-		if err != nil {
-			log.Fatalf("conn.Beegin failed: %v", err)
-		}
-		_, err = tx.Exec(context.Background(), "insert into urls(URL, ShortURL) values ($1, $2)", in.GetName(), created_short.Shortname)
-		if err != nil {
-			log.Fatalf("tx.Exec failed: %v", err)
-		}
-		tx.Commit(context.Background())
-		log.Printf("Returned END: %v", str)
-		return &pb.ShortURL{Shortname: str}, nil
-	// }
-	// return nil, nil
+
+	created_short := &pb.ShortURL{Shortname: str}
+	tx, err := s.conn.Begin(context.Background())
+	if err != nil {
+		log.Fatalf("conn.Beegin failed: %v", err)
+	}
+	_, err = tx.Exec(context.Background(), "insert into urls(URL, ShortURL) values ($1, $2)", in.GetName(), created_short.Shortname)
+	if err != nil {
+		log.Fatalf("tx.Exec failed: %v", err)
+	}
+	tx.Commit(context.Background())
+	log.Printf("Returned END: %v", str)
+	return &pb.ShortURL{Shortname: str}, nil
 }
+
 func (s *UserManagmentServer) Get(ctx context.Context, in *pb.ShortURL) (*pb.URL, error) {
 	
 	log.Printf("Received: %v", in.GetShortname())
 	rows := s.conn.QueryRow(context.Background(), "select * from urls where ShortURL=$1", in.GetShortname())
 	log.Printf("rows: %v\n", rows) 
-		var some_user user
-		if err := rows.Scan(&some_user.ID, &some_user.URL, &some_user.ShortUrl); err != nil {
-			log.Print("checkerror")
-			return nil, err
-		}
-		return &pb.URL{Name: some_user.URL}, nil
+	var some_user user
+
+	if err := rows.Scan(&some_user.ID, &some_user.URL, &some_user.ShortUrl); err != nil {
+		return nil, err
+	}
+	return &pb.URL{Name: some_user.URL}, nil
 }
 
 func (server *UserManagmentServer) Run() error {
