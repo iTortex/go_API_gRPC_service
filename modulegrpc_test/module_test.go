@@ -1,20 +1,7 @@
 package main
 
 import (
-	// "context"
-	// "errors"
-	// "fmt"
-	// "log"
-	// "math/rand"
-	// "net"
-	// "net/url"
-	// "os"
 	"testing"
-	// "../modulegrpc_server"
-
-	// pb "example.com/module/modulegrpc" // pb = protobuf  в начале мы настроили среду в module после чего указываем откуда мы подтягиваем функции (возможно неверное описание)
-	// "github.com/jackc/pgx/v4"
-	// "google.golang.org/grpc"
 )
 
 const (
@@ -22,7 +9,6 @@ const (
 	simple_error_str = "qwerty.smerty"
 	simple_work_url = "https://open.spotify.com/"
 	long_str = "aspndasngopiwddfjsdfapsdoeriuetpasdfpnsdgpnsdpfisdpfihsdpfhasfhasofhasofhas[fhashfas[fh[spfhasdhfoashfsfhjlsfhsljkfhlkjshflkjshfkljshfkjshfkjashfkjashfjasfhkahfsfowutbfadpubfaosdufhsdufhwuehrbdf;jasbdg;asjdbgls;dfhwoeurhioduf[iuwritpwiqiosjglkajglaskjgapsgihpiwhtpwihtpiwt"
-	
 )
 
 func TestAdd(t *testing.T) {

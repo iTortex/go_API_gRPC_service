@@ -65,9 +65,9 @@ func (s *UserManagmentServer) Create(ctx context.Context, in *pb.URL) (*pb.Short
 		fmt.Fprintf(os.Stderr, "Table creation failed: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("Received: %v", in.GetName())
+	log.Printf("Received: %v\n", in.GetName())
 	if err := Validate(in.GetName()); err != nil {
-		log.Printf("Not valid URL: %v", err)
+		log.Printf("Not valid URL: %v\n", err)
 		return nil, err
 	}
 
@@ -76,11 +76,11 @@ func (s *UserManagmentServer) Create(ctx context.Context, in *pb.URL) (*pb.Short
 
 	err = rows.Scan(&some_user.ID, &some_user.URL, &some_user.ShortUrl)
 	if err != nil && err.Error() != "no rows in result set" {
-			log.Printf("error check: %v\n", err)
+			log.Printf("Error check: %v\n", err)
 			return nil, err
 		}
 	if in.GetName() == some_user.URL {
-			log.Printf("Returned: %v", some_user.ShortUrl)
+			log.Printf("Returned: %v\n", some_user.ShortUrl)
 			return &pb.ShortURL{Shortname: some_user.ShortUrl}, nil
 	}
 
@@ -92,7 +92,7 @@ func (s *UserManagmentServer) Create(ctx context.Context, in *pb.URL) (*pb.Short
 	rows = s.conn.QueryRow(context.Background(), "select * from urls where ShortURL=$1", str)
 	err = rows.Scan(&some_user.ID, &some_user.URL, &some_user.ShortUrl)
 	if err != nil && err.Error() != "no rows in result set" {
-		log.Printf("error check: %v\n", err)
+		log.Printf("Error check: %v\n", err)
 		return nil, err
 	}
 	for err == nil {
@@ -104,7 +104,7 @@ func (s *UserManagmentServer) Create(ctx context.Context, in *pb.URL) (*pb.Short
 		rows = s.conn.QueryRow(context.Background(), "select * from urls where ShortURL=$1", str)
 		err = rows.Scan(&some_user.ID, &some_user.URL, &some_user.ShortUrl)
 		if err != nil && err.Error() != "no rows in result set" {
-			log.Printf("error check: %v\n", err)
+			log.Printf("Error check: %v\n", err)
 			return nil, err
 		}
 	}
@@ -119,20 +119,20 @@ func (s *UserManagmentServer) Create(ctx context.Context, in *pb.URL) (*pb.Short
 		log.Fatalf("tx.Exec failed: %v", err)
 	}
 	tx.Commit(context.Background())
-	log.Printf("Returned END: %v", str)
+	log.Printf("Returned: %v\n", str)
 	return &pb.ShortURL{Shortname: str}, nil
 }
 
 func (s *UserManagmentServer) Get(ctx context.Context, in *pb.ShortURL) (*pb.URL, error) {
 	
-	log.Printf("Received: %v", in.GetShortname())
+	log.Printf("Received: %v\n", in.GetShortname())
 	rows := s.conn.QueryRow(context.Background(), "select * from urls where ShortURL=$1", in.GetShortname())
-	log.Printf("rows: %v\n", rows) 
 	var some_user user
 
 	if err := rows.Scan(&some_user.ID, &some_user.URL, &some_user.ShortUrl); err != nil {
 		return nil, err
 	}
+	log.Printf("Returned: %v\n", some_user.URL)
 	return &pb.URL{Name: some_user.URL}, nil
 }
 
