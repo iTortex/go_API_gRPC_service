@@ -131,6 +131,7 @@ func (s *UserManagmentServer) Create(ctx context.Context, in *pb.URL) (*pb.Short
 		log.Printf("Returned: %v\n", str)
 		return &pb.ShortURL{Shortname: str}, nil
 	} else {
+
 		name := in.GetName()
 		log.Printf("Received: %v\n", name)
 		if err := Validate(name); err != nil {
@@ -160,7 +161,7 @@ func (s *UserManagmentServer) Create(ctx context.Context, in *pb.URL) (*pb.Short
 
 		log.Printf("Returned: %v\n", str)
 
-		file, err := os.OpenFile("names.txt", os.O_WRONLY, 0777)
+		file, err := os.OpenFile("names.txt", os.O_APPEND | os.O_WRONLY, 0644)
 		if err != nil {
 			log.Printf("Cant find old data: %v", err)
 			return nil, err
@@ -217,7 +218,7 @@ func (server *UserManagmentServer) Run() error {
 	pb.RegisterUserManagmentServer(s, server)
 	log.Printf("Server listening at %v", lis.Addr())
 
-	file, err := os.OpenFile("names.txt", os.O_CREATE|os.O_RDWR, 0777)
+	file, err := os.OpenFile("names.txt", os.O_CREATE|os.O_RDONLY, 0777)
 	if err != nil {
 		log.Printf("Cant find old data: %v", err)
 		return err

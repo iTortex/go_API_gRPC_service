@@ -16,7 +16,7 @@ services:
       - db_data:/var/lib/postgresql/data
   urlcoin:
     environment:
-      DB_USAGE: 'false'
+      DB_USAGE: 'true'
     build : .
     depends_on :
       - db
